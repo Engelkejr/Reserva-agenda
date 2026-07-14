@@ -7,7 +7,7 @@ export async function GET(request, { params }) {
     
     const { data: booking, error: fetchError } = await supabase
       .from('bookings')
-      .select('id, isConfirmed')
+      .select('id, isconfirmed')
       .eq('token', token)
       .single();
 
@@ -18,14 +18,14 @@ export async function GET(request, { params }) {
       );
     }
 
-    if (booking.isConfirmed) {
+    if (booking.isconfirmed) {
        return new NextResponse(
         `<html><head><title>Já Confirmada</title><style>body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #e4fce4; color: #00cc00; }</style></head><body><h1>Já Confirmada!</h1><p>Sua reserva já estava confirmada.</p><a href="/">Voltar ao Início</a></body></html>`,
         { status: 200, headers: { 'Content-Type': 'text/html' } }
       );
     }
 
-    await supabase.from('bookings').update({ isConfirmed: 1 }).eq('token', token);
+    await supabase.from('bookings').update({ isconfirmed: 1 }).eq('token', token);
 
     return new NextResponse(
       `<html><head><title>Reserva Confirmada</title><style>body { font-family: sans-serif; text-align: center; padding: 50px; background-color: #e4fce4; color: #00cc00; }</style></head><body><h1>Reserva Confirmada com Sucesso!</h1><p>Sua sala 435 está garantida.</p><a href="/">Voltar ao Início</a></body></html>`,

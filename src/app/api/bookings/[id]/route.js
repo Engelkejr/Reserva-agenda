@@ -17,7 +17,7 @@ export async function PUT(request, { params }) {
     const { id } = params;
     const { date, startTime, endTime, name, sector, contact, email, isConfirmed } = await request.json();
     const { error } = await supabase.from('bookings').update({ 
-      date, startTime, endTime, name, sector, contact, email, isConfirmed: isConfirmed ? 1 : 0 
+      date, starttime: startTime, endtime: endTime, name, sector, contact, email, isconfirmed: isConfirmed ? 1 : 0 
     }).eq('id', id);
     if (error) throw error;
     return NextResponse.json({ success: true });

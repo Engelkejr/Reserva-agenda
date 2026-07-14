@@ -5,10 +5,19 @@ import nodemailer from 'nodemailer';
 
 export async function GET(request) {
   try {
-    const { data, error } = await supabase.from('bookings').select('*').order('date', { ascending: true }).order('startTime', { ascending: true });
+    const { data, error } = await supabase.from('bookings').select('*').order('date', { ascending: true }).order('starttime', { ascending: true });
     if (error) throw error;
-    return NextResponse.json(data || []);
+    
+    const mapped = (data || []).map(b => ({
+      ...b,
+      startTime: b.starttime,
+      endTime: b.endtime,
+      isConfirmed: b.isconfirmed
+    }));
+    
+    return NextResponse.json(mapped);
   } catch (error) {
+    console.error(error);
     return NextResponse.json({ error: 'Erro ao buscar reservas' }, { status: 500 });
   }
 }
@@ -21,8 +30,8 @@ export async function POST(request) {
       .from('bookings')
       .select('id')
       .eq('date', date)
-      .lt('startTime', endTime)
-      .gt('endTime', startTime);
+      .lt('starttime', endTime)
+      .gt('endtime', startTime);
     
     if (existError) throw existError;
     
@@ -34,7 +43,7 @@ export async function POST(request) {
     const token = uuidv4();
 
     const { error: insertError } = await supabase.from('bookings').insert([
-      { id, date, startTime, endTime, name, sector, contact, email, token, isConfirmed: 0 }
+      { id, date, starttime: startTime, endtime: endTime, name, sector, contact, email, token, isconfirmed: 0 }
     ]);
     if (insertError) throw insertError;
 
