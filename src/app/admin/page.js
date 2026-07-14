@@ -43,12 +43,21 @@ export default function Admin() {
     }
   }, [loggedIn]);
 
-  const handleLogin = (e) => {
+  const handleLogin = async (e) => {
     e.preventDefault();
-    if (password === 'admin123') {
-      setLoggedIn(true);
-    } else {
-      alert('Senha incorreta!');
+    try {
+      const res = await fetch('/api/auth', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password })
+      });
+      if (res.ok) {
+        setLoggedIn(true);
+      } else {
+        alert('Senha incorreta!');
+      }
+    } catch (err) {
+      alert('Erro de conexão.');
     }
   };
 
