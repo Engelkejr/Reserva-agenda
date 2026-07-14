@@ -1,45 +1,55 @@
-import sqlite3 from 'sqlite3';
-import path from 'path';
+import { Pool } from 'pg';
 
-const dbPath = path.resolve(process.cwd(), 'bookings_v2.db');
+let pool;
 
-export const db = new sqlite3.Database(dbPath, (err) => {
-  if (err) {
-    console.error('Error opening database', err);
-  } else {
-    db.run(`
-      CREATE TABLE IF NOT EXISTS bookings (
-        id TEXT PRIMARY KEY,
-        date TEXT NOT NULL,
-        startTime TEXT NOT NULL,
-        endTime TEXT NOT NULL,
-        name TEXT NOT NULL,
-        sector TEXT NOT NULL,
-        contact TEXT NOT NULL,
-        email TEXT NOT NULL,
-        isConfirmed INTEGER DEFAULT 0,
-        token TEXT NOT NULL,
-        createdAt DATETIME DEFAULT CURRENT_TIMESTAMP
-      )
-    `);
+if (!pool) {
+  pool = new Pool({
+    connectionString: process.env.DATABASE_URL,
+    ssl: { rejectUnauthorized: false } // Supabase requires SSL
+  });
+}
+
+export const initDb = async () => {
+  const createTableQuery = `
+    CREATE TABLE IF NOT EXISTS bookings (
+      id TEXT PRIMARY KEY,
+      date TEXT NOT NULL,
+      startTime TEXT NOT NULL,
+      endTime TEXT NOT NULL,
+      name TEXT NOT NULL,
+      sector TEXT NOT NULL,
+      contact TEXT NOT NULL,
+      email TEXT NOT NULL,
+      token TEXT NOT NULL,
+      isConfirmed INTEGER DEFAULT 0
+    );
+  `;
+  try {
+    await pool.query(createTableQuery);
+  } catch (error) {
+    console.error('Error initializing database:', error);
   }
-});
-
-// Helper for running async queries
-export const query = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.all(sql, params, (err, rows) => {
-      if (err) reject(err);
-      else resolve(rows);
-    });
-  });
 };
 
-export const run = (sql, params = []) => {
-  return new Promise((resolve, reject) => {
-    db.run(sql, params, function (err) {
-      if (err) reject(err);
-      else resolve(this);
-    });
+export const query = async (text, params = []) => {
+  // Convert sqlite ? placeholders to postgres $1, $2 placeholders
+  let pgText = text;
+  params.forEach((_, i) => {
+    pgText = pgText.replace('?', `$${i + 1}`);
   });
+  
+  const { rows } = await pool.query(pgText, params);
+  return rows;
 };
+
+export const run = async (text, params = []) => {
+  let pgText = text;
+  params.forEach((_, i) => {
+    pgText = pgText.replace('?', `$${i + 1}`);
+  });
+  
+  await pool.query(pgText, params);
+};
+
+// Initialize DB schema
+initDb();
