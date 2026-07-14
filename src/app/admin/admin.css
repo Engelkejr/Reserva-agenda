@@ -18,7 +18,7 @@
     border: 1px solid var(--border-color);
     border-radius: var(--radius);
     padding: 16px;
-    background: #fff;
+    background: var(--surface-color);
   }
 
   .responsive-table td {

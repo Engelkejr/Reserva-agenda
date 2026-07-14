@@ -38,6 +38,14 @@ export default function Admin() {
   };
 
   useEffect(() => {
+    // Check persistent login
+    const isAuth = localStorage.getItem('adminAuth');
+    if (isAuth === 'true') {
+      setLoggedIn(true);
+    }
+  }, []);
+
+  useEffect(() => {
     if (loggedIn) {
       fetchBookings();
     }
@@ -52,6 +60,7 @@ export default function Admin() {
         body: JSON.stringify({ password })
       });
       if (res.ok) {
+        localStorage.setItem('adminAuth', 'true');
         setLoggedIn(true);
       } else {
         alert('Senha incorreta!');
@@ -59,6 +68,11 @@ export default function Admin() {
     } catch (err) {
       alert('Erro de conexão.');
     }
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem('adminAuth');
+    setLoggedIn(false);
   };
 
   const handleDelete = async (id) => {
@@ -156,7 +170,7 @@ export default function Admin() {
         </div>
         <div style={{ display: 'flex', gap: '12px' }}>
           <button className="btn btn-primary" onClick={() => setBulkModalOpen(true)}>Criar Múltiplas</button>
-          <button className="btn btn-outline" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={() => setLoggedIn(false)}>Sair</button>
+          <button className="btn btn-outline" style={{ borderColor: 'var(--danger)', color: 'var(--danger)' }} onClick={handleLogout}>Sair</button>
         </div>
       </header>
 
