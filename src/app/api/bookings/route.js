@@ -105,18 +105,50 @@ export async function POST(request) {
         to: email,
         subject: "Confirmação de Reserva - Sala 435",
         html: `
-          <div style="font-family: sans-serif; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-            <h2 style="color: #000000;">Confirmação de Reserva</h2>
-            <p>Olá <strong>${name}</strong>,</p>
-            <p>Sua reserva para a Sala 435 no dia <strong>${date}</strong> das <strong>${startTime}</strong> às <strong>${endTime}</strong> foi solicitada.</p>
-            <p>Para garantir a sala, por favor confirme sua reserva agora:</p>
-            <a href="${confirmLink}" style="display: inline-block; background-color: #000000; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; margin-top: 10px; margin-bottom: 20px;">Confirmar Reserva</a>
-            <hr style="border: none; border-top: 1px solid #eee; margin: 20px 0;" />
-            <p style="font-size: 0.9em; color: #666;">Se você desistiu ou agendou por engano, por favor cancele e libere o horário:</p>
-            <a href="${cancelLink}" style="display: inline-block; background-color: #fce4e4; color: #cc0000; padding: 8px 16px; text-decoration: none; border-radius: 5px; margin-top: 5px; font-size: 0.9em;">Cancelar Reserva</a>
+          <div style="background-color: #F8F7F3; padding: 40px 20px; font-family: 'Inter', Helvetica, Arial, sans-serif; color: #1A1A1A; line-height: 1.6;">
+            <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E6E4DD; padding: 40px; border-radius: 4px;">
+              
+              <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: #1A1A1A; margin-top: 0; border-bottom: 1px solid #E6E4DD; padding-bottom: 20px; font-weight: normal;">
+                Confirmação de Reserva
+              </h2>
+              
+              <p style="font-size: 16px; margin-top: 30px;">Olá <strong>${name}</strong>,</p>
+              
+              <p style="font-size: 16px;">Sua solicitação de reserva para a <strong>Sala 435</strong> foi registrada em nosso sistema para <strong>HOJE</strong>.</p>
+              
+              <table style="width: 100%; margin: 30px 0; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 15px; border: 1px solid #E6E4DD; background-color: #F8F7F3; font-size: 14px; color: #6B6B66; text-transform: uppercase; letter-spacing: 1px;">Data</td>
+                  <td style="padding: 15px; border: 1px solid #E6E4DD; font-size: 16px; font-weight: bold;">${date}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 15px; border: 1px solid #E6E4DD; background-color: #F8F7F3; font-size: 14px; color: #6B6B66; text-transform: uppercase; letter-spacing: 1px;">Horário</td>
+                  <td style="padding: 15px; border: 1px solid #E6E4DD; font-size: 16px; font-weight: bold;">${startTime} às ${endTime}</td>
+                </tr>
+              </table>
+
+              <p style="font-size: 16px; margin-bottom: 25px;">Para garantir o uso do espaço, por favor, confirme sua presença clicando no botão abaixo:</p>
+              
+              <a href="${confirmLink}" style="display: inline-block; background-color: #2B4A3C; color: #FFFFFF; padding: 16px 32px; text-decoration: none; border-radius: 4px; font-weight: bold; font-size: 16px; text-align: center;">
+                Confirmar Reserva
+              </a>
+              
+              <div style="margin-top: 40px; padding-top: 20px; border-top: 1px solid #E6E4DD;">
+                <p style="font-size: 14px; color: #6B6B66;">Se você desistiu ou agendou por engano, pedimos a gentileza de cancelar para liberar o horário para outros colegas.</p>
+                <a href="${cancelLink}" style="color: #B84B4B; text-decoration: none; font-size: 14px; font-weight: bold; display: inline-block; margin-top: 10px;">
+                  Cancelar esta reserva
+                </a>
+              </div>
+
+            </div>
+            
+            <div style="max-width: 600px; margin: 20px auto 0; text-align: center; color: #6B6B66; font-size: 12px;">
+              <p>Este é um e-mail automático do sistema de gestão da Sala 435.<br>Por favor, não responda a este e-mail.</p>
+            </div>
           </div>
         `,
       });
+
       console.log("Message sent for today's booking: %s", info.messageId);
     }
 
