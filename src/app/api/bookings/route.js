@@ -1,12 +1,13 @@
 import { NextResponse } from 'next/server';
-import { query, run } from '@/lib/db';
+import { supabase } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import nodemailer from 'nodemailer';
 
 export async function GET(request) {
   try {
-    const bookings = await query('SELECT * FROM bookings ORDER BY date ASC, startTime ASC');
-    return NextResponse.json(bookings);
+    const { data, error } = await supabase.from('bookings').select('*').order('date', { ascending: true }).order('startTime', { ascending: true });
+    if (error) throw error;
+    return NextResponse.json(data || []);
   } catch (error) {
     return NextResponse.json({ error: 'Erro ao buscar reservas' }, { status: 500 });
   }
@@ -16,21 +17,26 @@ export async function POST(request) {
   try {
     const { date, startTime, endTime, name, sector, contact, email } = await request.json();
 
-    // Check overlapping bookings
-    // A booking overlaps if (new_start < exist_end) AND (new_end > exist_start)
-    const existing = await query('SELECT id FROM bookings WHERE date = ? AND startTime < ? AND endTime > ?', [date, endTime, startTime]);
+    const { data: existing, error: existError } = await supabase
+      .from('bookings')
+      .select('id')
+      .eq('date', date)
+      .lt('startTime', endTime)
+      .gt('endTime', startTime);
     
-    if (existing.length > 0) {
+    if (existError) throw existError;
+    
+    if (existing && existing.length > 0) {
       return NextResponse.json({ error: 'Já existe uma reserva que conflita com este horário.' }, { status: 400 });
     }
 
     const id = uuidv4();
     const token = uuidv4();
 
-    await run(
-      'INSERT INTO bookings (id, date, startTime, endTime, name, sector, contact, email, token) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      [id, date, startTime, endTime, name, sector, contact, email, token]
-    );
+    const { error: insertError } = await supabase.from('bookings').insert([
+      { id, date, startTime, endTime, name, sector, contact, email, token, isConfirmed: 0 }
+    ]);
+    if (insertError) throw insertError;
 
     // Setup nodemailer to use Gmail
     const host = request.headers.get('host');

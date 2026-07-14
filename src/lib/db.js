@@ -1,55 +1,15 @@
-import { Pool } from 'pg';
+import { createClient } from '@supabase/supabase-js';
 
-let pool;
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+const supabaseKey = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY;
 
-if (!pool) {
-  pool = new Pool({
-    connectionString: process.env.DATABASE_URL,
-    ssl: { rejectUnauthorized: false } // Supabase requires SSL
-  });
-}
-
-export const initDb = async () => {
-  const createTableQuery = `
-    CREATE TABLE IF NOT EXISTS bookings (
-      id TEXT PRIMARY KEY,
-      date TEXT NOT NULL,
-      startTime TEXT NOT NULL,
-      endTime TEXT NOT NULL,
-      name TEXT NOT NULL,
-      sector TEXT NOT NULL,
-      contact TEXT NOT NULL,
-      email TEXT NOT NULL,
-      token TEXT NOT NULL,
-      isConfirmed INTEGER DEFAULT 0
-    );
-  `;
-  try {
-    await pool.query(createTableQuery);
-  } catch (error) {
-    console.error('Error initializing database:', error);
-  }
-};
+export const supabase = createClient(supabaseUrl, supabaseKey);
 
 export const query = async (text, params = []) => {
-  // Convert sqlite ? placeholders to postgres $1, $2 placeholders
-  let pgText = text;
-  params.forEach((_, i) => {
-    pgText = pgText.replace('?', `$${i + 1}`);
-  });
-  
-  const { rows } = await pool.query(pgText, params);
-  return rows;
+  // We don't use raw SQL anymore, this is just for compatibility if needed.
+  return [];
 };
 
 export const run = async (text, params = []) => {
-  let pgText = text;
-  params.forEach((_, i) => {
-    pgText = pgText.replace('?', `$${i + 1}`);
-  });
-  
-  await pool.query(pgText, params);
+  // Compatibility wrapper
 };
-
-// Initialize DB schema
-initDb();
