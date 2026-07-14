@@ -1,0 +1,58 @@
+.responsive-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+@media (max-width: 768px) {
+  .responsive-table thead {
+    display: none;
+  }
+
+  .responsive-table, .responsive-table tbody, .responsive-table tr, .responsive-table td {
+    display: block;
+    width: 100%;
+  }
+
+  .responsive-table tr {
+    margin-bottom: 16px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius);
+    padding: 16px;
+    background: #fff;
+  }
+
+  .responsive-table td {
+    padding: 8px 0;
+    text-align: right;
+    border-bottom: 1px solid var(--bg-color);
+    position: relative;
+    padding-left: 100px; /* Instead of 50% which pushes too far */
+    min-height: 40px;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+  }
+
+  .responsive-table td:last-child {
+    border-bottom: none;
+    text-align: center;
+    padding-left: 0;
+    margin-top: 10px;
+    justify-content: center;
+  }
+
+  .responsive-table td::before {
+    content: attr(data-label);
+    position: absolute;
+    left: 0;
+    width: auto;
+    text-align: left;
+    font-weight: 600;
+    color: var(--text-secondary);
+    font-size: 0.85rem;
+  }
+
+  .responsive-table td:last-child::before {
+    display: none;
+  }
+}

@@ -1,0 +1,108 @@
+.calendar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+@media (min-width: 768px) {
+  .calendar-container {
+    flex-direction: row;
+    align-items: flex-start;
+  }
+}
+
+.calendar-section {
+  flex: 1;
+  min-width: 300px;
+}
+
+.time-section {
+  flex: 1;
+  min-width: 300px;
+  border-left: 1px solid var(--border-color);
+  padding-left: 24px;
+}
+
+@media (max-width: 767px) {
+  .time-section {
+    border-left: none;
+    border-top: 1px solid var(--border-color);
+    padding-left: 0;
+    padding-top: 24px;
+  }
+}
+
+/* Calendar Grid */
+.calendar-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 4px;
+  text-align: center;
+}
+
+.calendar-day-name {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  text-transform: uppercase;
+  padding: 8px 0;
+}
+
+.calendar-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  color: var(--text-primary);
+}
+
+.calendar-cell:hover:not(.disabled) {
+  background-color: var(--border-color);
+}
+
+.calendar-cell.selected {
+  background-color: var(--primary);
+  color: white;
+  font-weight: 600;
+}
+
+.calendar-cell.disabled {
+  color: #d1d5db;
+  cursor: not-allowed;
+}
+
+.calendar-cell.holiday {
+  background-color: var(--holiday-bg);
+  color: var(--holiday-text);
+  font-weight: 500;
+}
+.calendar-cell.holiday.selected {
+  background-color: var(--holiday-text);
+  color: white;
+}
+
+/* Existing Bookings */
+.booking-item {
+  background: var(--bg-color);
+  border: 1px solid var(--border-color);
+  border-radius: 6px;
+  padding: 12px;
+  margin-bottom: 8px;
+  font-size: 0.85rem;
+}
+
+.booking-item.conflict {
+  border-color: var(--danger);
+  background: var(--holiday-bg);
+}
