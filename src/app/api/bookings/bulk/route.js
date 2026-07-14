@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { query, run } from '@/lib/db';
+import { supabase } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 
 export async function POST(request) {
@@ -10,12 +10,41 @@ export async function POST(request) {
       return NextResponse.json({ error: 'Nenhuma data selecionada.' }, { status: 400 });
     }
 
-    // Validação de conflitos para todas as datas
+    // Overlap validation for all dates
     const conflitos = [];
+    
+    // Using current time logic for overlaps to match single bookings
+    const now = new Date();
+    const brtString = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+    const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false });
+    const [brtHour, brtMinute] = formatter.format(now).split(':').map(Number);
+    const currentMins = brtHour * 60 + brtMinute;
+
     for (const date of dates) {
-      const existing = await query('SELECT id FROM bookings WHERE date = ? AND startTime < ? AND endTime > ?', [date, endTime, startTime]);
-      if (existing.length > 0) {
-        conflitos.push(date);
+      const { data: existing, error } = await supabase
+        .from('bookings')
+        .select('id, date, starttime, isconfirmed')
+        .eq('date', date)
+        .lt('starttime', endTime)
+        .gt('endtime', startTime);
+
+      if (error) throw error;
+
+      if (existing && existing.length > 0) {
+        const validOverlaps = existing.filter(b => {
+          if (b.isconfirmed === 1) return true;
+          if (b.date > brtString) return true;
+          if (b.date === brtString) {
+            const [startH, startM] = b.starttime.split(':').map(Number);
+            const startMins = startH * 60 + startM;
+            return currentMins < (startMins - 60);
+          }
+          return false;
+        });
+
+        if (validOverlaps.length > 0) {
+          conflitos.push(date);
+        }
       }
     }
 
@@ -25,17 +54,22 @@ export async function POST(request) {
       }, { status: 400 });
     }
 
-    // Inserção em lote
-    const insertPromises = dates.map(date => {
-      const id = uuidv4();
-      const token = uuidv4();
-      return run(
-        'INSERT INTO bookings (id, date, startTime, endTime, name, sector, contact, email, token, isConfirmed) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1)',
-        [id, date, startTime, endTime, name, sector, contact, email, token]
-      );
-    });
+    // Bulk insert
+    const insertData = dates.map(date => ({
+      id: uuidv4(),
+      token: uuidv4(),
+      date,
+      starttime: startTime,
+      endtime: endTime,
+      name,
+      sector,
+      contact,
+      email,
+      isconfirmed: 1 // Admin bulk creations are pre-confirmed
+    }));
 
-    await Promise.all(insertPromises);
+    const { error: insertError } = await supabase.from('bookings').insert(insertData);
+    if (insertError) throw insertError;
 
     return NextResponse.json({ success: true, count: dates.length });
   } catch (error) {

@@ -3,7 +3,7 @@ import { supabase } from '@/lib/db';
 
 export async function DELETE(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (error) throw error;
     return NextResponse.json({ success: true });
@@ -14,7 +14,7 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const { id } = params;
+    const { id } = await params;
     const { date, startTime, endTime, name, sector, contact, email, isConfirmed } = await request.json();
     const { error } = await supabase.from('bookings').update({ 
       date, starttime: startTime, endtime: endTime, name, sector, contact, email, isconfirmed: isConfirmed ? 1 : 0 
