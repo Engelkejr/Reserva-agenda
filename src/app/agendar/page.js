@@ -39,9 +39,10 @@ export default function Agendar() {
     try {
       const res = await fetch('/api/bookings');
       const data = await res.json();
-      setBookings(data || []);
+      setBookings(Array.isArray(data) ? data : []);
     } catch (error) {
       console.error(error);
+      setBookings([]);
     }
   };
 
