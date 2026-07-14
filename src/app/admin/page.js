@@ -23,8 +23,9 @@ export default function Admin() {
   const [loggedIn, setLoggedIn] = useState(false);
   const [bookings, setBookings] = useState([]);
   
-  const [editingId, setEditingId] = useState(null);
-  const [editForm, setEditForm] = useState({ startTime: '', endTime: '' });
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editForm, setEditForm] = useState({ id: '', date: '', startTime: '', endTime: '', name: '', sector: '', contact: '', email: '', isConfirmed: false });
+  const [editMessage, setEditMessage] = useState('');
 
   const fetchBookings = async () => {
     try {
@@ -92,8 +93,38 @@ export default function Admin() {
   };
 
   const startEdit = (booking) => {
-    setEditingId(booking.id);
-    setEditForm({ startTime: booking.startTime, endTime: booking.endTime });
+    setEditForm({ ...booking, isConfirmed: booking.isConfirmed === 1 || booking.isConfirmed === true });
+    setEditMessage('');
+    setEditModalOpen(true);
+  };
+
+  const handleEditSubmit = async (e) => {
+    e.preventDefault();
+    setEditMessage('');
+    if (editForm.startTime >= editForm.endTime) {
+      setEditMessage('Término deve ser maior que o início.');
+      return;
+    }
+    
+    try {
+      const res = await fetch(`/api/bookings/${editForm.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(editForm)
+      });
+      if (res.ok) {
+        setEditMessage('Salvo com sucesso!');
+        fetchBookings();
+        setTimeout(() => {
+          setEditModalOpen(false);
+        }, 1500);
+      } else {
+        const data = await res.json();
+        setEditMessage(data.error || 'Erro ao salvar.');
+      }
+    } catch (err) {
+      setEditMessage('Erro de rede.');
+    }
   };
 
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
@@ -210,6 +241,58 @@ export default function Admin() {
           </div>
         </div>
       )}
+
+      {editModalOpen && (
+        <div style={{ position: 'fixed', top: 0, left: 0, width: '100vw', height: '100vh', background: 'rgba(0,0,0,0.5)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 1000, padding: '20px' }}>
+          <div className="card animate-enter" style={{ width: '100%', maxWidth: '500px', maxHeight: '90vh', overflowY: 'auto' }}>
+            <h3 style={{ marginBottom: '16px' }}>Editar Reserva</h3>
+            <form onSubmit={handleEditSubmit} className="flex-col gap-4">
+              <div>
+                <label className="label">Data (AAAA-MM-DD)</label>
+                <input type="date" className="input-field" value={editForm.date} onChange={e => setEditForm({...editForm, date: e.target.value})} required />
+              </div>
+              <div className="flex gap-4">
+                <div style={{ flex: 1 }}>
+                  <label className="label">Início</label>
+                  <select className="select-field" value={editForm.startTime} onChange={e => setEditForm({...editForm, startTime: e.target.value})}>
+                    {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+                <div style={{ flex: 1 }}>
+                  <label className="label">Término</label>
+                  <select className="select-field" value={editForm.endTime} onChange={e => setEditForm({...editForm, endTime: e.target.value})}>
+                    {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div>
+                <label className="label">Nome</label>
+                <input type="text" className="input-field" value={editForm.name} onChange={e => setEditForm({...editForm, name: e.target.value})} required />
+              </div>
+              <div>
+                <label className="label">E-mail</label>
+                <input type="email" className="input-field" value={editForm.email} onChange={e => setEditForm({...editForm, email: e.target.value})} required />
+              </div>
+              <div>
+                <label className="label">Setor</label>
+                <input type="text" className="input-field" value={editForm.sector} onChange={e => setEditForm({...editForm, sector: e.target.value})} required />
+              </div>
+              <div>
+                <label className="label">Status</label>
+                <select className="select-field" value={editForm.isConfirmed ? '1' : '0'} onChange={e => setEditForm({...editForm, isConfirmed: e.target.value === '1'})}>
+                  <option value="1">Confirmada</option>
+                  <option value="0">Pendente</option>
+                </select>
+              </div>
+              <div className="flex gap-4 mt-4">
+                <button type="button" className="btn btn-outline" onClick={() => setEditModalOpen(false)} style={{ flex: 1 }}>Cancelar</button>
+                <button type="submit" className="btn btn-primary" style={{ flex: 1 }}>Salvar Edição</button>
+              </div>
+              {editMessage && <p style={{ color: editMessage.includes('Erro') || editMessage.includes('maior') ? 'var(--danger)' : 'var(--success)', marginTop: '10px', fontSize: '0.9rem', textAlign: 'center' }}>{editMessage}</p>}
+            </form>
+          </div>
+        </div>
+      )}
       
       <div className="card" style={{ padding: 0, border: 'none' }}>
         <div>
@@ -232,19 +315,7 @@ export default function Admin() {
                   <tr key={b.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                     <td data-label="Data" style={{ padding: '16px 24px', fontWeight: 500 }}>{b.date.split('-').reverse().join('/')}</td>
                     <td data-label="Horário" style={{ padding: '16px 24px' }}>
-                      {editingId === b.id ? (
-                        <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                          <select className="select-field" style={{ padding: '6px', fontSize: '0.85rem' }} value={editForm.startTime} onChange={e => setEditForm({...editForm, startTime: e.target.value})}>
-                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                          <span>-</span>
-                          <select className="select-field" style={{ padding: '6px', fontSize: '0.85rem' }} value={editForm.endTime} onChange={e => setEditForm({...editForm, endTime: e.target.value})}>
-                            {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
-                          </select>
-                        </div>
-                      ) : (
-                        <span style={{ fontWeight: 600 }}>{b.startTime} - {b.endTime}</span>
-                      )}
+                      <span style={{ fontWeight: 600 }}>{b.startTime} - {b.endTime}</span>
                     </td>
                     <td data-label="Nome" style={{ padding: '16px 24px' }}>
                       <div style={{ fontWeight: 500 }}>{b.name}</div>
@@ -255,24 +326,17 @@ export default function Admin() {
                       {b.isConfirmed ? <span style={{ color: '#fff', background: 'var(--success)', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>Confirmada</span> : <span style={{ color: '#000', background: '#fcd34d', padding: '4px 10px', borderRadius: '4px', fontSize: '0.8rem', fontWeight: 600 }}>Pendente</span>}
                     </td>
                     <td data-label="Ações" style={{ padding: '16px 24px', textAlign: 'right' }}>
-                      {editingId === b.id ? (
-                        <div style={{ display: 'inline-flex', gap: '8px' }}>
-                          <button className="btn btn-primary" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => saveEdit(b)}>Salvar</button>
-                          <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => setEditingId(null)}>Cancelar</button>
-                        </div>
-                      ) : (
-                        <div style={{ display: 'inline-flex', gap: '8px' }}>
-                          <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleConfirm(b)}>
-                            {b.isConfirmed ? 'Desfazer' : 'Confirmar'}
-                          </button>
-                          <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => startEdit(b)}>
-                            Editar
-                          </button>
-                          <button className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleDelete(b.id)}>
-                            Excluir
-                          </button>
-                        </div>
-                      )}
+                      <div style={{ display: 'inline-flex', gap: '8px' }}>
+                        <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleConfirm(b)}>
+                          {b.isConfirmed ? 'Desfazer' : 'Confirmar'}
+                        </button>
+                        <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => startEdit(b)}>
+                          Editar
+                        </button>
+                        <button className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleDelete(b.id)}>
+                          Excluir
+                        </button>
+                      </div>
                     </td>
                   </tr>
                 ))
