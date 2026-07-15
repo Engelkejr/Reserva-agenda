@@ -5,9 +5,10 @@ import { cookies } from 'next/headers';
 export async function POST(request) {
   try {
     const { password } = await request.json();
-    const correctPassword = process.env.ADMIN_PASSWORD;
+    const correctPassword = process.env.ADMIN_PASSWORD?.trim();
+    const inputPassword = password?.trim();
     
-    if (correctPassword && password === correctPassword) {
+    if (correctPassword && inputPassword === correctPassword) {
       cookies().set('adminAuth', 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
