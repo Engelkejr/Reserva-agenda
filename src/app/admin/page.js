@@ -46,7 +46,8 @@ export default function Admin() {
     try {
       const res = await fetch('/api/bookings');
       const data = await res.json();
-      setBookings(Array.isArray(data) ? data : []);
+      const newData = Array.isArray(data) ? data : [];
+      setBookings(prev => JSON.stringify(prev) === JSON.stringify(newData) ? prev : newData);
     } catch (error) {
       console.error(error);
       setBookings([]);
@@ -57,7 +58,8 @@ export default function Admin() {
     try {
       const res = await fetch(`/api/holidays?year=${currentYear}`);
       const data = await res.json();
-      setHolidays(Array.isArray(data) ? data : []);
+      const newData = Array.isArray(data) ? data : [];
+      setHolidays(prev => JSON.stringify(prev) === JSON.stringify(newData) ? prev : newData);
     } catch (error) {
       console.error(error);
       setHolidays([]);
@@ -76,11 +78,11 @@ export default function Admin() {
       if (activeTab === 'reservas') fetchBookings();
       if (activeTab === 'feriados') fetchHolidays();
       
-      // Sincronização em tempo real (Polling a cada 5s)
+      // Sincronização em tempo real (Polling a cada 15s)
       const interval = setInterval(() => {
         if (activeTab === 'reservas') fetchBookings();
         if (activeTab === 'feriados') fetchHolidays();
-      }, 5000);
+      }, 15000);
       
       return () => clearInterval(interval);
     }

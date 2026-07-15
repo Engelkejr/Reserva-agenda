@@ -47,9 +47,15 @@ export default function Agendar() {
     try {
       const res = await fetch('/api/bookings');
       const data = await res.json();
-      setBookings(Array.isArray(data) ? data : []);
+      const newBookings = Array.isArray(data) ? data : [];
+      
+      setBookings(prev => {
+        // Só atualiza a tela se as reservas tiverem mudado (evita travamentos)
+        if (JSON.stringify(prev) === JSON.stringify(newBookings)) return prev;
+        return newBookings;
+      });
     } catch (error) {
-      console.error(error);
+      console.error('Erro ao buscar reservas:', error);
       setBookings([]);
     }
   };
@@ -57,10 +63,10 @@ export default function Agendar() {
   useEffect(() => {
     fetchBookings();
     
-    // Sincronização em tempo real (Polling a cada 5s)
+    // Sincronização em tempo real (Polling otimizado a cada 15s)
     const interval = setInterval(() => {
       fetchBookings();
-    }, 5000);
+    }, 15000);
     
     return () => clearInterval(interval);
   }, []);
