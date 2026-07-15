@@ -309,7 +309,7 @@ export default function Admin() {
                         {b.isConfirmed ? <span className="badge success">Confirmada</span> : <span className="badge warning">Pendente</span>}
                       </td>
                       <td data-label="Ações" style={{ padding: '16px 24px', textAlign: 'right' }}>
-                        <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                        <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'nowrap', justifyContent: 'flex-end', whiteSpace: 'nowrap' }}>
                           <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleConfirm(b)}>
                             {b.isConfirmed ? 'Desfazer' : 'Confirmar'}
                           </button>
