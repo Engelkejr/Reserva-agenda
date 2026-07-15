@@ -4,12 +4,6 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import './agendar.css';
 
-const holidays = [
-  '2026-01-01', '2026-01-20', '2026-02-16', '2026-02-17', '2026-04-03', 
-  '2026-04-21', '2026-04-23', '2026-05-01', '2026-06-04', '2026-09-07', 
-  '2026-10-12', '2026-11-02', '2026-11-15', '2026-11-20', '2026-12-25'
-];
-
 const generateTimeOptions = () => {
   const options = [];
   for (let h = 8; h <= 19; h++) {
@@ -32,8 +26,21 @@ export default function Agendar() {
   const [formData, setFormData] = useState({ name: '', sector: '', contact: '', email: '' });
   
   const [bookings, setBookings] = useState([]);
+  const [holidays, setHolidays] = useState([]);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState('');
+
+  // Busca feriados para o ano atual do calendário
+  const fetchHolidays = async (year) => {
+    try {
+      const res = await fetch(`/api/holidays?year=${year}`);
+      const data = await res.json();
+      setHolidays(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.error('Erro ao buscar feriados:', error);
+      setHolidays([]);
+    }
+  };
 
   const fetchBookings = async () => {
     try {
@@ -50,6 +57,11 @@ export default function Agendar() {
     fetchBookings();
   }, []);
 
+  // Recarrega feriados quando o ano do calendário muda
+  useEffect(() => {
+    fetchHolidays(currentDate.getFullYear());
+  }, [currentDate.getFullYear()]);
+
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
@@ -65,7 +77,9 @@ export default function Agendar() {
     return `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
   };
 
-  const isHoliday = (ymd) => holidays.includes(ymd);
+  // Retorna o objeto de feriado se a data for feriado, ou null
+  const getHolidayInfo = (ymd) => holidays.find(h => h.date === ymd) || null;
+
   const isPast = (ymd) => {
     const todayStr = new Date().toISOString().split('T')[0];
     return ymd < todayStr;
@@ -92,16 +106,20 @@ export default function Agendar() {
     for (let d = 1; d <= daysInMonth; d++) {
       const ymd = formatYMD(year, month, d);
       const weekend = isWeekend(year, month, d);
-      const holiday = isHoliday(ymd);
+      const holidayInfo = getHolidayInfo(ymd);
       const past = isPast(ymd);
-      const disabled = weekend || holiday || past;
+      const disabled = weekend || !!holidayInfo || past;
+      
+      // Determinar se é feriado oficial ou ponto facultativo
+      const isFacultativo = holidayInfo && (holidayInfo.type === 'facultativo' || holidayInfo.type === 'recesso' || holidayInfo.type === 'outro');
       
       let classes = "calendar-cell";
       if (disabled) classes += " disabled";
-      if (holiday) classes += " holiday";
+      if (holidayInfo && !isFacultativo) classes += " holiday";
+      if (isFacultativo) classes += " facultativo";
       if (selectedDate === ymd) classes += " selected";
 
-      cells.push(
+      const cell = (
         <div 
           key={d} 
           className={classes} 
@@ -115,6 +133,23 @@ export default function Agendar() {
           {d}
         </div>
       );
+
+      // Envolve com tooltip se for feriado
+      if (holidayInfo) {
+        cells.push(
+          <div key={`wrapper-${d}`} className="calendar-cell-wrapper">
+            {cell}
+            <div className="holiday-tooltip">
+              {holidayInfo.name}
+              <span className={`holiday-type-badge ${holidayInfo.type}`}>
+                {holidayInfo.type}
+              </span>
+            </div>
+          </div>
+        );
+      } else {
+        cells.push(cell);
+      }
     }
 
     return (
@@ -128,6 +163,16 @@ export default function Agendar() {
         </div>
         <div className="calendar-grid">
           {cells}
+        </div>
+        <div className="calendar-legend">
+          <div className="legend-item">
+            <span className="legend-dot holiday"></span>
+            Feriado
+          </div>
+          <div className="legend-item">
+            <span className="legend-dot facultativo"></span>
+            Ponto Facultativo
+          </div>
         </div>
       </div>
     );

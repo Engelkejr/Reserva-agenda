@@ -1,6 +1,125 @@
+/* Admin specific styles */
+
 .responsive-table {
   width: 100%;
   border-collapse: collapse;
+}
+
+.responsive-table th, .responsive-table td {
+  padding: 16px 24px;
+  text-align: left;
+}
+
+.responsive-table th {
+  font-weight: 600;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+}
+
+/* Badges */
+.badge {
+  padding: 4px 10px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  display: inline-block;
+}
+
+.badge.success {
+  background: var(--success);
+  color: #fff;
+}
+
+.badge.warning {
+  background: #fcd34d;
+  color: #000;
+}
+
+.holiday-badge {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+.holiday-badge.nacional { background: #f3f4f6; color: #374151; border: 1px solid #d1d5db; }
+.holiday-badge.estadual { background: #eff6ff; color: #1d4ed8; border: 1px solid #bfdbfe; }
+.holiday-badge.municipal { background: #fefce8; color: #a16207; border: 1px solid #fef08a; }
+.holiday-badge.facultativo, .holiday-badge.recesso, .holiday-badge.outro { 
+  background: var(--facultativo-bg); 
+  color: var(--facultativo-text); 
+  border: 1px solid #fdba74; 
+}
+
+/* Tabs */
+.admin-tabs {
+  display: flex;
+  gap: 16px;
+  border-bottom: 1px solid var(--border-color);
+  margin-bottom: 32px;
+}
+
+.admin-tab {
+  padding: 12px 24px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  color: var(--text-secondary);
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+}
+
+.admin-tab:hover {
+  color: var(--text-primary);
+  background: rgba(0,0,0,0.02);
+}
+
+.admin-tab.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+  font-weight: 600;
+}
+
+/* Modals */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0,0,0,0.6);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  zIndex: 1000;
+  padding: 20px;
+  backdrop-filter: blur(2px);
+}
+
+.modal-content {
+  width: 100%;
+  max-width: 550px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+/* Form Messages */
+.message {
+  margin-top: 10px;
+  font-size: 0.9rem;
+  text-align: center;
+  padding: 12px;
+  border-radius: var(--radius);
+}
+
+.message.error {
+  color: var(--danger);
+  background: var(--holiday-bg);
+}
+
+.message.success {
+  color: var(--success);
+  background: #ecfdf5;
 }
 
 @media (max-width: 768px) {
@@ -26,7 +145,7 @@
     text-align: right;
     border-bottom: 1px solid var(--bg-color);
     position: relative;
-    padding-left: 100px; /* Instead of 50% which pushes too far */
+    padding-left: 100px;
     min-height: 40px;
     display: flex;
     justify-content: flex-end;
