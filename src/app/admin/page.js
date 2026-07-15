@@ -24,6 +24,7 @@ export default function Admin() {
   const [holidays, setHolidays] = useState([]);
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear());
   const [activeTab, setActiveTab] = useState('reservas'); // 'reservas' ou 'feriados'
+  const [searchDate, setSearchDate] = useState('');
   
   // Modals state
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -295,11 +296,26 @@ export default function Admin() {
         </button>
       </div>
 
-      {activeTab === 'reservas' && (
+      {activeTab === 'reservas' && (() => {
+        const filteredBookings = bookings.filter(b => !searchDate || b.date === searchDate);
+        return (
         <div className="animate-enter">
-          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+          <div style={{ display: 'flex', gap: '12px', marginBottom: '24px', alignItems: 'center', flexWrap: 'wrap' }}>
             <button className="btn btn-primary" onClick={() => setSingleModalOpen(true)}>+ Nova Reserva</button>
             <button className="btn btn-outline" onClick={() => setBulkModalOpen(true)}>Criar Lote Múltiplo</button>
+            <div style={{ flexGrow: 1 }}></div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <label htmlFor="searchDate" style={{ fontWeight: 500, color: 'var(--text-secondary)', fontSize: '0.9rem' }}>Pesquisar Dia:</label>
+              <input 
+                id="searchDate" 
+                type="date" 
+                className="input-field" 
+                style={{ width: 'auto', padding: '8px 12px' }}
+                value={searchDate} 
+                onChange={(e) => setSearchDate(e.target.value)} 
+              />
+              {searchDate && <button className="btn btn-outline" style={{ padding: '8px 12px' }} onClick={() => setSearchDate('')}>Limpar</button>}
+            </div>
           </div>
           <div className="card" style={{ padding: 0, border: 'none' }}>
             <table className="responsive-table">
@@ -314,10 +330,10 @@ export default function Admin() {
                 </tr>
               </thead>
               <tbody>
-                {bookings.length === 0 ? (
-                  <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Nenhuma reserva encontrada.</td></tr>
+                {filteredBookings.length === 0 ? (
+                  <tr><td colSpan="6" style={{ padding: '40px', textAlign: 'center', color: 'var(--text-secondary)' }}>Nenhuma reserva encontrada para os critérios selecionados.</td></tr>
                 ) : (
-                  bookings.map(b => (
+                  filteredBookings.map(b => (
                     <tr key={b.id} style={{ borderBottom: '1px solid var(--border-color)' }}>
                       <td data-label="Data" style={{ padding: '16px 24px', fontWeight: 500 }}>{b.date.split('-').reverse().join('/')}</td>
                       <td data-label="Horário" style={{ padding: '16px 24px' }}>
@@ -348,7 +364,7 @@ export default function Admin() {
             </table>
           </div>
         </div>
-      )}
+      )})()}
 
       {activeTab === 'feriados' && (
         <div className="animate-enter">
