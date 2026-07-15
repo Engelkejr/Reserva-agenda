@@ -1,8 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 
+import { cookies } from 'next/headers';
+
 export async function DELETE(request, { params }) {
   try {
+    const auth = cookies().get('adminAuth')?.value;
+    if (auth !== 'authenticated') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { id } = await params;
     const { error } = await supabase.from('bookings').delete().eq('id', id);
     if (error) throw error;
@@ -14,6 +19,9 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
+    const auth = cookies().get('adminAuth')?.value;
+    if (auth !== 'authenticated') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { id } = await params;
     const { date, startTime, endTime, name, sector, contact, email, isConfirmed } = await request.json();
     const { error } = await supabase.from('bookings').update({ 

@@ -1,11 +1,20 @@
 import { NextResponse } from 'next/server';
 
+import { cookies } from 'next/headers';
+
 export async function POST(request) {
   try {
     const { password } = await request.json();
     const correctPassword = process.env.ADMIN_PASSWORD || 'admin123';
     
     if (password === correctPassword) {
+      cookies().set('adminAuth', 'authenticated', {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: 'strict',
+        path: '/',
+        maxAge: 60 * 60 * 24 * 7 // 7 days
+      });
       return NextResponse.json({ success: true });
     }
     

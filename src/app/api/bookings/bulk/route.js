@@ -1,9 +1,13 @@
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
+import { cookies } from 'next/headers';
 
 export async function POST(request) {
   try {
+    const auth = cookies().get('adminAuth')?.value;
+    if (auth !== 'authenticated') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { dates, startTime, endTime, name, sector, contact, email } = await request.json();
 
     if (!dates || dates.length === 0) {

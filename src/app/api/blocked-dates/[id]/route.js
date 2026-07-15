@@ -9,14 +9,18 @@
 
 import { NextResponse } from 'next/server';
 import { supabase } from '@/lib/db';
+import { cookies } from 'next/headers';
 
 export async function DELETE(request, context) {
   try {
+    const auth = cookies().get('adminAuth')?.value;
+    if (auth !== 'authenticated') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const { id } = await context.params;
 
     if (!id) {
       return NextResponse.json(
-        { error: 'O parâmetro "id" é obrigatório.' },
+        { error: 'ID is required.' },
         { status: 400 }
       );
     }

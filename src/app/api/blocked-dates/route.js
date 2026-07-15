@@ -47,8 +47,13 @@ export async function GET() {
 /** Tipos permitidos para datas bloqueadas */
 const ALLOWED_TYPES = ['facultativo', 'recesso', 'outro', 'ignorado'];
 
+import { cookies } from 'next/headers';
+
 export async function POST(request) {
   try {
+    const auth = cookies().get('adminAuth')?.value;
+    if (auth !== 'authenticated') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
     const body = await request.json();
     const { date, name, type } = body;
 
