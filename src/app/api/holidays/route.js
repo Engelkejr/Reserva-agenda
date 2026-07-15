@@ -50,7 +50,7 @@ export async function GET(request) {
       date: row.date,
       name: row.name,
       type: row.type,
-    }));
+    })) : [];
 
     // Combinar feriados e datas bloqueadas, ordenados por data
     const merged = [...holidays, ...blockedItems];
