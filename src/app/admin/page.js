@@ -46,7 +46,7 @@ export default function Admin() {
 
   const fetchBookings = async () => {
     try {
-      const res = await fetch('/api/bookings');
+      const res = await fetch('/api/bookings', { cache: 'no-store' });
       const data = await res.json();
       const newData = Array.isArray(data) ? data : [];
       setBookings(prev => JSON.stringify(prev) === JSON.stringify(newData) ? prev : newData);
@@ -58,7 +58,7 @@ export default function Admin() {
 
   const fetchHolidays = async () => {
     try {
-      const res = await fetch(`/api/holidays?year=${currentYear}`);
+      const res = await fetch(`/api/holidays?year=${currentYear}`, { cache: 'no-store' });
       const data = await res.json();
       const newData = Array.isArray(data) ? data : [];
       setHolidays(prev => JSON.stringify(prev) === JSON.stringify(newData) ? prev : newData);

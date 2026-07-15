@@ -33,7 +33,7 @@ export default function Agendar() {
   // Busca feriados para o ano atual do calendário
   const fetchHolidays = async (year) => {
     try {
-      const res = await fetch(`/api/holidays?year=${year}`);
+      const res = await fetch(`/api/holidays?year=${year}`, { cache: 'no-store' });
       const data = await res.json();
       // Filtra os feriados desativados para não bloquearem o calendário
       setHolidays(Array.isArray(data) ? data.filter(h => h.type !== 'ignorado') : []);
@@ -45,7 +45,7 @@ export default function Agendar() {
 
   const fetchBookings = async () => {
     try {
-      const res = await fetch('/api/bookings');
+      const res = await fetch('/api/bookings', { cache: 'no-store' });
       const data = await res.json();
       const newBookings = Array.isArray(data) ? data : [];
       

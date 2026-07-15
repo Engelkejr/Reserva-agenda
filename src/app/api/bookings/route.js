@@ -3,6 +3,8 @@ import { supabase } from '@/lib/db';
 import { v4 as uuidv4 } from 'uuid';
 import nodemailer from 'nodemailer';
 
+export const dynamic = 'force-dynamic';
+
 export async function GET(request) {
   try {
     const { data, error } = await supabase.from('bookings').select('*').order('date', { ascending: true }).order('starttime', { ascending: true });
