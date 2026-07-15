@@ -75,6 +75,14 @@ export default function Admin() {
     if (loggedIn) {
       if (activeTab === 'reservas') fetchBookings();
       if (activeTab === 'feriados') fetchHolidays();
+      
+      // Sincronização em tempo real (Polling a cada 5s)
+      const interval = setInterval(() => {
+        if (activeTab === 'reservas') fetchBookings();
+        if (activeTab === 'feriados') fetchHolidays();
+      }, 5000);
+      
+      return () => clearInterval(interval);
     }
   }, [loggedIn, activeTab, currentYear]);
 

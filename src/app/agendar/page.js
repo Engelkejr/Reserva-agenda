@@ -56,6 +56,13 @@ export default function Agendar() {
 
   useEffect(() => {
     fetchBookings();
+    
+    // Sincronização em tempo real (Polling a cada 5s)
+    const interval = setInterval(() => {
+      fetchBookings();
+    }, 5000);
+    
+    return () => clearInterval(interval);
   }, []);
 
   // Recarrega feriados quando o ano do calendário muda
