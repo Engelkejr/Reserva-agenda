@@ -31,7 +31,8 @@ export default function Admin() {
   const [editMessage, setEditMessage] = useState('');
 
   const [bulkModalOpen, setBulkModalOpen] = useState(false);
-  const [bulkForm, setBulkForm] = useState({ dates: '', startTime: '09:00', endTime: '10:00', name: 'Admin', sector: 'Administração', contact: 'N/A', email: 'admin@sala435.local' });
+  const [bulkForm, setBulkForm] = useState({ dates: [], startTime: '09:00', endTime: '10:00', name: 'Admin', sector: 'Administração', contact: 'N/A', email: 'admin@sala435.local' });
+  const [bulkTempDate, setBulkTempDate] = useState('');
   const [bulkMessage, setBulkMessage] = useState('');
 
   const [singleModalOpen, setSingleModalOpen] = useState(false);
@@ -165,9 +166,9 @@ export default function Admin() {
   const handleBulkSubmit = async (e) => {
     e.preventDefault();
     setBulkMessage('');
-    const datesArray = bulkForm.dates.split(',').map(d => d.trim()).filter(d => d.match(/^\d{4}-\d{2}-\d{2}$/));
+    const datesArray = bulkForm.dates;
     
-    if (datesArray.length === 0) return setBulkMessage('Formato inválido. Use AAAA-MM-DD separado por vírgula.');
+    if (datesArray.length === 0) return setBulkMessage('Adicione pelo menos uma data na lista.');
     if (bulkForm.startTime >= bulkForm.endTime) return setBulkMessage('Término deve ser maior que o início.');
 
     try {
@@ -455,8 +456,29 @@ export default function Admin() {
             <h3 style={{ marginBottom: '16px' }}>Criar Múltiplas Reservas</h3>
             <form onSubmit={handleBulkSubmit} className="flex-col gap-4">
               <div>
-                <label className="label">Datas (AAAA-MM-DD separadas por vírgula)</label>
-                <input type="text" className="input-field" placeholder="Ex: 2026-07-20, 2026-07-22" value={bulkForm.dates} onChange={e => setBulkForm({...bulkForm, dates: e.target.value})} required />
+                <label className="label">Selecionar Datas para o Lote</label>
+                <div style={{ display: 'flex', gap: '8px' }}>
+                  <input type="date" className="input-field" value={bulkTempDate} onChange={e => setBulkTempDate(e.target.value)} />
+                  <button type="button" className="btn btn-outline" onClick={() => {
+                    if (bulkTempDate && !bulkForm.dates.includes(bulkTempDate)) {
+                      setBulkForm({ ...bulkForm, dates: [...bulkForm.dates, bulkTempDate].sort() });
+                      setBulkTempDate('');
+                    }
+                  }}>Adicionar</button>
+                </div>
+                {bulkForm.dates.length > 0 && (
+                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px', padding: '12px', background: 'var(--bg-color)', borderRadius: 'var(--radius)' }}>
+                    {bulkForm.dates.map(d => (
+                      <span key={d} className="badge" style={{ display: 'inline-flex', alignItems: 'center', gap: '6px', background: '#fff', border: '1px solid var(--border-color)', color: '#374151', padding: '6px 10px', fontSize: '0.85rem' }}>
+                        {d.split('-').reverse().join('/')}
+                        <button type="button" onClick={() => setBulkForm({ ...bulkForm, dates: bulkForm.dates.filter(date => date !== d) })} style={{ background: 'transparent', border: 'none', cursor: 'pointer', color: 'var(--danger)', fontWeight: 'bold', fontSize: '1rem', lineHeight: 1 }}>&times;</button>
+                      </span>
+                    ))}
+                  </div>
+                )}
+                {bulkForm.dates.length === 0 && (
+                  <div style={{ marginTop: '8px', fontSize: '0.85rem', color: 'var(--text-secondary)' }}>Nenhuma data adicionada.</div>
+                )}
               </div>
               <div className="flex gap-4">
                 <div style={{ flex: 1 }}>
