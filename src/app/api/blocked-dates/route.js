@@ -45,7 +45,7 @@ export async function GET() {
 // ============================================================================
 
 /** Tipos permitidos para datas bloqueadas */
-const ALLOWED_TYPES = ['facultativo', 'recesso', 'outro'];
+const ALLOWED_TYPES = ['facultativo', 'recesso', 'outro', 'ignorado'];
 
 export async function POST(request) {
   try {

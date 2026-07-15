@@ -227,6 +227,17 @@ export default function Admin() {
     }
   };
 
+  const handleDisableHoliday = async (date, name) => {
+    if (confirm(`Deseja realmente desativar o feriado "${name}"? Ele deixará de bloquear o calendário.`)) {
+      await fetch('/api/blocked-dates', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ date, name, type: 'ignorado' })
+      });
+      fetchHolidays();
+    }
+  };
+
   const handleDeleteHoliday = async (id) => {
     if (confirm('Deseja remover este bloqueio de data?')) {
       await fetch(`/api/blocked-dates/${id}`, { method: 'DELETE' });
@@ -355,17 +366,24 @@ export default function Admin() {
                   <tr><td colSpan="4" style={{ padding: '40px', textAlign: 'center' }}>Nenhuma data encontrada.</td></tr>
                 ) : (
                   holidays.map((h, i) => (
-                    <tr key={h.id || `h-${i}`} style={{ borderBottom: '1px solid var(--border-color)' }}>
+                    <tr key={h.id || `h-${i}`} style={{ borderBottom: '1px solid var(--border-color)', opacity: h.type === 'ignorado' ? 0.6 : 1 }}>
                       <td data-label="Data" style={{ padding: '16px 24px', fontWeight: 500 }}>{h.date.split('-').reverse().join('/')}</td>
-                      <td data-label="Nome" style={{ padding: '16px 24px', fontWeight: 500 }}>{h.name}</td>
+                      <td data-label="Nome" style={{ padding: '16px 24px', fontWeight: 500, textDecoration: h.type === 'ignorado' ? 'line-through' : 'none' }}>{h.name}</td>
                       <td data-label="Tipo" style={{ padding: '16px 24px' }}>
-                        <span className={`holiday-badge ${h.type}`}>{h.type}</span>
+                        <span className={`holiday-badge ${h.type}`}>{h.type === 'ignorado' ? 'Desativado' : h.type}</span>
                       </td>
                       <td data-label="Ações" style={{ padding: '16px 24px', textAlign: 'right' }}>
                         {h.id ? (
-                          <button className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleDeleteHoliday(h.id)}>Excluir</button>
+                          h.type === 'ignorado' ? (
+                            <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleDeleteHoliday(h.id)}>Restaurar</button>
+                          ) : (
+                            <button className="btn btn-danger" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleDeleteHoliday(h.id)}>Excluir</button>
+                          )
                         ) : (
-                          <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Fixo de Sistema</span>
+                          <div style={{ display: 'inline-flex', gap: '8px', flexWrap: 'nowrap', alignItems: 'center' }}>
+                            <span style={{ fontSize: '0.8rem', color: 'var(--text-secondary)' }}>Fixo</span>
+                            <button className="btn btn-outline" style={{ padding: '6px 12px', fontSize: '0.8rem' }} onClick={() => handleDisableHoliday(h.date, h.name)}>Desativar</button>
+                          </div>
                         )}
                       </td>
                     </tr>

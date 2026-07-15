@@ -49,13 +49,18 @@ export async function GET(request) {
 
     // Mapear datas bloqueadas para o mesmo formato de saída
     const blockedItems = (!error && blockedDates) ? blockedDates.map((row) => ({
+      id: row.id,
       date: row.date,
       name: row.name,
       type: row.type,
     })) : [];
 
-    // Combinar feriados e datas bloqueadas, ordenados por data
-    const merged = [...holidays, ...blockedItems];
+    // Remover feriados padrão que foram ignorados (desativados) pelo admin
+    const ignoredDates = new Set(blockedItems.filter(b => b.type === 'ignorado').map(b => b.date));
+    const activeHolidays = holidays.filter(h => !ignoredDates.has(h.date));
+
+    // Combinar feriados ativos e datas bloqueadas, ordenados por data
+    const merged = [...activeHolidays, ...blockedItems];
     merged.sort((a, b) => a.date.localeCompare(b.date));
 
     return NextResponse.json(merged);

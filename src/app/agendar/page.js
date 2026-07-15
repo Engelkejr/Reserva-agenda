@@ -35,7 +35,8 @@ export default function Agendar() {
     try {
       const res = await fetch(`/api/holidays?year=${year}`);
       const data = await res.json();
-      setHolidays(Array.isArray(data) ? data : []);
+      // Filtra os feriados desativados para não bloquearem o calendário
+      setHolidays(Array.isArray(data) ? data.filter(h => h.type !== 'ignorado') : []);
     } catch (error) {
       console.error('Erro ao buscar feriados:', error);
       setHolidays([]);
