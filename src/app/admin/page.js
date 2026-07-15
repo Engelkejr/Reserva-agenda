@@ -306,7 +306,7 @@ export default function Admin() {
                 <tr style={{ backgroundColor: '#f9f9fb', borderBottom: '2px solid var(--border-color)' }}>
                   <th>Data</th>
                   <th>Horário</th>
-                  <th>Nome</th>
+                  <th>Solicitante</th>
                   <th>Setor</th>
                   <th>Status</th>
                   <th style={{ textAlign: 'right' }}>Ações</th>
@@ -322,9 +322,10 @@ export default function Admin() {
                       <td data-label="Horário" style={{ padding: '16px 24px' }}>
                         <span style={{ fontWeight: 600 }}>{b.startTime} - {b.endTime}</span>
                       </td>
-                      <td data-label="Nome" style={{ padding: '16px 24px' }}>
-                        <div style={{ fontWeight: 500 }}>{b.name}</div>
-                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)' }}>{b.email}</div>
+                      <td data-label="Solicitante" style={{ padding: '16px 24px' }}>
+                        <div style={{ fontWeight: 500, color: 'var(--text-primary)' }}>{b.name}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '4px' }}>✉️ {b.email}</div>
+                        <div style={{ fontSize: '0.85rem', color: 'var(--text-secondary)', marginTop: '2px' }}>📞 {b.contact}</div>
                       </td>
                       <td data-label="Setor" style={{ padding: '16px 24px' }}>{b.sector}</td>
                       <td data-label="Status" style={{ padding: '16px 24px' }}>
