@@ -5,7 +5,8 @@ import { cookies } from 'next/headers';
 
 export async function DELETE(request, { params }) {
   try {
-    const auth = cookies().get('adminAuth')?.value;
+    const cookieStore = await cookies();
+    const auth = cookieStore.get('adminAuth')?.value;
     if (auth !== 'authenticated') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;
@@ -19,7 +20,8 @@ export async function DELETE(request, { params }) {
 
 export async function PUT(request, { params }) {
   try {
-    const auth = cookies().get('adminAuth')?.value;
+    const cookieStore = await cookies();
+    const auth = cookieStore.get('adminAuth')?.value;
     if (auth !== 'authenticated') return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const { id } = await params;

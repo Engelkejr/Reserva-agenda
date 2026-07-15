@@ -10,7 +10,8 @@ export async function POST(request) {
     const inputPassword = password?.trim();
     
     if (correctPassword && inputPassword === correctPassword) {
-      cookies().set('adminAuth', 'authenticated', {
+      const cookieStore = await cookies();
+      cookieStore.set('adminAuth', 'authenticated', {
         httpOnly: true,
         secure: process.env.NODE_ENV === 'production',
         sameSite: 'strict',
@@ -22,6 +23,6 @@ export async function POST(request) {
     
     return NextResponse.json({ success: false }, { status: 401 });
   } catch (error) {
-    return NextResponse.json({ error: 'Erro de servidor' }, { status: 500 });
+    return NextResponse.json({ error: error.message || 'Erro de servidor', stack: error.stack }, { status: 500 });
   }
 }
