@@ -482,7 +482,31 @@ export default function Admin() {
                       setBulkForm({ ...bulkForm, dates: [...bulkForm.dates, bulkTempDate].sort() });
                       setBulkTempDate('');
                     }
-                  }}>Adicionar</button>
+                  }}>Adicionar Dia</button>
+                </div>
+                <div style={{ marginTop: '12px' }}>
+                  <label className="label" style={{ fontSize: '0.85rem' }}>Ou digite/cole várias datas juntas (Ex: 10-10-2026, 12/10/2026)</label>
+                  <textarea 
+                    className="input-field" 
+                    placeholder="Cole as datas aqui e clique fora para extrair..." 
+                    rows={2}
+                    onBlur={(e) => {
+                      const text = e.target.value;
+                      if (!text.trim()) return;
+                      const regex = /(\d{2})[\/\-](\d{2})[\/\-](\d{4})|(\d{4})[\/\-](\d{2})[\/\-](\d{2})/g;
+                      let match;
+                      const newDates = new Set([...bulkForm.dates]);
+                      while ((match = regex.exec(text)) !== null) {
+                        if (match[1]) { // DD/MM/AAAA ou DD-MM-AAAA
+                          newDates.add(`${match[3]}-${match[2]}-${match[1]}`);
+                        } else { // AAAA-MM-DD ou AAAA/MM/DD
+                          newDates.add(`${match[4]}-${match[5]}-${match[6]}`);
+                        }
+                      }
+                      setBulkForm({ ...bulkForm, dates: Array.from(newDates).sort() });
+                      e.target.value = '';
+                    }} 
+                  />
                 </div>
                 {bulkForm.dates.length > 0 && (
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '12px', padding: '12px', background: 'var(--bg-color)', borderRadius: 'var(--radius)' }}>

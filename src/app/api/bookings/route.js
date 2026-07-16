@@ -13,11 +13,8 @@ export async function GET(request) {
     const now = new Date();
     const brtString = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
     
-    // Limpeza automática (Lazy Deletion): Apaga do banco reservas de dias anteriores
-    // Isso evita o acúmulo de dados mortos e mantém o banco leve.
-    // Usamos await para garantir que a Vercel não congele a execução antes de deletar.
+    // Limpeza automática (Lazy Cleanup): apaga as reservas anteriores a hoje para não pesar o banco
     await supabase.from('bookings').delete().lt('date', brtString);
-
     const formatter = new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Sao_Paulo', hour: '2-digit', minute: '2-digit', hour12: false });
     const [brtHour, brtMinute] = formatter.format(now).split(':').map(Number);
     const currentMins = brtHour * 60 + brtMinute;
