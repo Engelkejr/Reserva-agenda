@@ -95,7 +95,8 @@ export default function Agendar() {
   const getHolidayInfo = (ymd) => holidays.find(h => h.date === ymd) || null;
 
   const isPast = (ymd) => {
-    const todayStr = new Date().toISOString().split('T')[0];
+    const now = new Date();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
     return ymd < todayStr;
   };
 
@@ -209,7 +210,13 @@ export default function Agendar() {
       });
       const data = await res.json();
       if (res.ok) {
-        setMessage('Reserva efetuada! Um e-mail de confirmação foi enviado.');
+        const now = new Date();
+        const todayStr = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+        if (selectedDate === todayStr) {
+          setMessage('Reserva efetuada! Um e-mail de confirmação foi enviado.');
+        } else {
+          setMessage('Reserva agendada! Você receberá um e-mail para confirmar a presença no dia da reunião.');
+        }
         setFormData({ name: '', sector: '', contact: '', email: '' });
         fetchBookings();
       } else {
