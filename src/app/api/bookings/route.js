@@ -91,20 +91,46 @@ export async function POST(request) {
     const now = new Date();
     const brtString = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
 
-    // Só envia e-mail se a reserva for para HOJE
-    if (date === brtString) {
-      const host = request.headers.get('host');
-      const confirmLink = `http://${host}/api/confirm/${token}`;
-      const cancelLink = `http://${host}/api/cancel/${token}`;
-      
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+    const host = request.headers.get('host') || 'reserva-agenda.vercel.app';
+    const confirmLink = `https://${host}/api/confirm/${token}`;
+    const cancelLink = `https://${host}/api/cancel/${token}`;
+    
+    const transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
 
+    // Notificação para o Admin (sempre envia, não importa a data)
+    try {
+      await transporter.sendMail({
+        from: `"Sistema Sala 435" <${process.env.EMAIL_USER}>`,
+        to: process.env.EMAIL_USER, // O admin recebe no próprio e-mail configurado
+        subject: `Nova Reserva Solicitada: ${name} (${date.split('-').reverse().join('/')})`,
+        html: `
+          <div style="font-family: Arial, sans-serif; padding: 20px; color: #333;">
+            <h2 style="color: #2B4A3C;">Nova Reserva Agendada</h2>
+            <p>Uma nova reunião foi agendada na Sala 435 pelo site.</p>
+            <table style="width: 100%; max-width: 500px; border-collapse: collapse; margin-top: 15px;">
+              <tr><td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9; width: 120px;"><strong>Solicitante:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${name}</td></tr>
+              <tr><td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Setor:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${sector}</td></tr>
+              <tr><td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Contato:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${contact} | ${email}</td></tr>
+              <tr><td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Data:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${date.split('-').reverse().join('/')}</td></tr>
+              <tr><td style="padding: 10px; border: 1px solid #ddd; background: #f9f9f9;"><strong>Horário:</strong></td><td style="padding: 10px; border: 1px solid #ddd;">${startTime} às ${endTime}</td></tr>
+            </table>
+            <br>
+            <p><a href="https://${host}/admin" style="display: inline-block; padding: 10px 20px; background: #2B4A3C; color: white; text-decoration: none; border-radius: 4px;">Acessar Painel Admin</a></p>
+          </div>
+        `
+      });
+    } catch (adminErr) {
+      console.error("Falha ao notificar admin:", adminErr);
+    }
+
+    // Só envia e-mail para o usuário se a reserva for para HOJE
+    if (date === brtString) {
       const info = await transporter.sendMail({
         from: `"Administração Sala 435" <${process.env.EMAIL_USER}>`,
         to: email,
