@@ -76,6 +76,82 @@ export default function Agendar() {
     fetchHolidays(currentDate.getFullYear());
   }, [currentDate.getFullYear()]);
 
+  const dayBookings = bookings.filter(b => b.date === selectedDate);
+
+  const getAvailableStartTimes = () => {
+    let options = TIME_OPTIONS;
+    const now = new Date();
+    const todayStr = new Intl.DateTimeFormat('en-CA', { year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+    
+    if (selectedDate === todayStr) {
+      const currentH = now.getHours();
+      const currentM = now.getMinutes();
+      const currentMins = currentH * 60 + currentM;
+      options = options.filter(t => {
+        const [h, m] = t.split(':').map(Number);
+        return (h * 60 + m) > currentMins;
+      });
+    }
+
+    options = options.filter(t => {
+      const [h, m] = t.split(':').map(Number);
+      const mins = h * 60 + m;
+      return !dayBookings.some(b => {
+        const [sh, sm] = b.startTime.split(':').map(Number);
+        const [eh, em] = b.endTime.split(':').map(Number);
+        const sMins = sh * 60 + sm;
+        const eMins = eh * 60 + em;
+        return mins >= sMins && mins < eMins;
+      });
+    });
+
+    return options;
+  };
+
+  const getAvailableEndTimes = () => {
+    if (!startTime) return [];
+    let options = TIME_OPTIONS;
+    const [sh, sm] = startTime.split(':').map(Number);
+    const startMins = sh * 60 + sm;
+
+    options = options.filter(t => {
+      const [h, m] = t.split(':').map(Number);
+      return (h * 60 + m) > startMins;
+    });
+
+    const futureBookings = dayBookings.filter(b => {
+      const [bsh, bsm] = b.startTime.split(':').map(Number);
+      return (bsh * 60 + bsm) >= startMins;
+    });
+
+    if (futureBookings.length > 0) {
+      futureBookings.sort((a, b) => a.startTime.localeCompare(b.startTime));
+      const nextBooking = futureBookings[0];
+      const [nsh, nsm] = nextBooking.startTime.split(':').map(Number);
+      const nextStartMins = nsh * 60 + nsm;
+      options = options.filter(t => {
+        const [h, m] = t.split(':').map(Number);
+        return (h * 60 + m) <= nextStartMins;
+      });
+    }
+    return options;
+  };
+
+  const availableStartTimes = getAvailableStartTimes();
+  const availableEndTimes = getAvailableEndTimes();
+
+  useEffect(() => {
+    if (selectedDate && availableStartTimes.length > 0 && !availableStartTimes.includes(startTime)) {
+      setStartTime(availableStartTimes[0]);
+    }
+  }, [availableStartTimes, startTime, selectedDate]);
+
+  useEffect(() => {
+    if (selectedDate && availableEndTimes.length > 0 && !availableEndTimes.includes(endTime)) {
+      setEndTime(availableEndTimes[0]);
+    }
+  }, [availableEndTimes, endTime, selectedDate]);
+
   const getDaysInMonth = (year, month) => new Date(year, month + 1, 0).getDate();
   const getFirstDayOfMonth = (year, month) => new Date(year, month, 1).getDay();
 
@@ -229,7 +305,7 @@ export default function Agendar() {
     }
   };
 
-  const dayBookings = bookings.filter(b => b.date === selectedDate);
+
 
   return (
     <div className="container" style={{ padding: '40px 20px' }}>
@@ -266,13 +342,15 @@ export default function Agendar() {
                   <div style={{ flex: 1 }}>
                     <label className="label">Início</label>
                     <select className="select-field" value={startTime} onChange={e => setStartTime(e.target.value)}>
-                      {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                      {availableStartTimes.length === 0 && <option value="">Indisponível</option>}
+                      {availableStartTimes.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                   <div style={{ flex: 1 }}>
                     <label className="label">Término</label>
                     <select className="select-field" value={endTime} onChange={e => setEndTime(e.target.value)}>
-                      {TIME_OPTIONS.map(t => <option key={t} value={t}>{t}</option>)}
+                      {availableEndTimes.length === 0 && <option value="">Indisponível</option>}
+                      {availableEndTimes.map(t => <option key={t} value={t}>{t}</option>)}
                     </select>
                   </div>
                 </div>
