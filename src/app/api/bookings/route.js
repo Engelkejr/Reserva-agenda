@@ -20,14 +20,22 @@ export async function GET(request) {
     const currentMins = brtHour * 60 + brtMinute;
 
     const validBookings = (data || []).filter(b => {
-      if (b.isconfirmed === 1) return true;
       if (b.date > brtString) return true;
-      if (b.date === brtString) {
-        const [startH, startM] = b.starttime.split(':').map(Number);
-        const startMins = startH * 60 + startM;
+      if (b.date < brtString) return false;
+
+      const isConfirmed = b.isconfirmed === 1 || b.isconfirmed === true;
+      const [startH, startM] = b.starttime.split(':').map(Number);
+      const startMins = startH * 60 + startM;
+      const [endH, endM] = b.endtime.split(':').map(Number);
+      const endMins = endH * 60 + endM;
+
+      if (!isConfirmed) {
+        // Se não foi confirmada, expira 15 minutos antes de começar
         return currentMins < (startMins - 15);
+      } else {
+        // Se foi confirmada, continua aparecendo até o final da reunião!
+        return currentMins < endMins;
       }
-      return false;
     });
 
     const mapped = validBookings.map(b => ({
@@ -65,14 +73,20 @@ export async function POST(request) {
       const currentMins = brtHour * 60 + brtMinute;
 
       const validOverlaps = existing.filter(b => {
-        if (b.isconfirmed === 1) return true;
         if (b.date > brtString) return true;
-        if (b.date === brtString) {
-          const [startH, startM] = b.starttime.split(':').map(Number);
-          const startMins = startH * 60 + startM;
-          return currentMins < (startMins - 60);
+        if (b.date < brtString) return false;
+
+        const isConfirmed = b.isconfirmed === 1 || b.isconfirmed === true;
+        const [startH, startM] = b.starttime.split(':').map(Number);
+        const startMins = startH * 60 + startM;
+        const [endH, endM] = b.endtime.split(':').map(Number);
+        const endMins = endH * 60 + endM;
+
+        if (!isConfirmed) {
+          return currentMins < (startMins - 15);
+        } else {
+          return currentMins < endMins;
         }
-        return false;
       });
 
       if (validOverlaps.length > 0) {
