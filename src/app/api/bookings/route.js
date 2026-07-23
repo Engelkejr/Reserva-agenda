@@ -25,7 +25,7 @@ export async function GET(request) {
       if (b.date === brtString) {
         const [startH, startM] = b.starttime.split(':').map(Number);
         const startMins = startH * 60 + startM;
-        return currentMins < (startMins - 60);
+        return currentMins < (startMins - 15);
       }
       return false;
     });
@@ -129,8 +129,35 @@ export async function POST(request) {
       console.error("Falha ao notificar admin:", adminErr);
     }
 
-    // Só envia e-mail para o usuário se a reserva for para HOJE
+    // Lógica Inteligente de Envio Imediato
+    const { data: holidaysData } = await supabase.from('holidays').select('*');
+    const holidays = Array.isArray(holidaysData) ? holidaysData.filter(h => h.type !== 'ignorado') : [];
+
+    const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
+    const isHoliday = (d) => {
+      const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+      return holidays.some(h => h.date === ymd);
+    };
+
+    // Encontra o último dia útil ANTES da data da reserva
+    let lastBusinessDay = new Date(date + 'T00:00:00-03:00');
+    do {
+      lastBusinessDay.setDate(lastBusinessDay.getDate() - 1);
+    } while (isWeekend(lastBusinessDay) || isHoliday(lastBusinessDay));
+
+    // O cron roda no lastBusinessDay às 18:00
+    lastBusinessDay.setHours(18, 0, 0, 0);
+
+    let shouldSendNow = false;
     if (date === brtString) {
+      shouldSendNow = true; // Reserva pro mesmo dia: manda na hora
+    } else if (now.getTime() > lastBusinessDay.getTime()) {
+      shouldSendNow = true; // Cron já rodou para o dia dessa reunião: manda na hora
+    }
+
+    if (shouldSendNow) {
+      const displayDateText = (date === brtString) ? "HOJE" : `o dia <strong>${date.split('-').reverse().join('/')}</strong>`;
+      
       const info = await transporter.sendMail({
         from: `"Administração Sala 435" <${process.env.EMAIL_USER}>`,
         to: email,
@@ -145,7 +172,7 @@ export async function POST(request) {
               
               <p style="font-size: 16px; margin-top: 30px;">Olá <strong>${name}</strong>,</p>
               
-              <p style="font-size: 16px;">Sua solicitação de reserva para a <strong>Sala 435</strong> foi registrada em nosso sistema para <strong>HOJE</strong>.</p>
+              <p style="font-size: 16px;">Sua solicitação de reserva para a <strong>Sala 435</strong> foi registrada em nosso sistema para ${displayDateText}.</p>
               
               <table style="width: 100%; margin: 30px 0; border-collapse: collapse;">
                 <tr>

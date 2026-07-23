@@ -11,18 +11,34 @@ export async function GET(request) {
 
   try {
     const now = new Date();
-    const brtString = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(now);
+    
+    const { data: holidaysData } = await supabase.from('holidays').select('*');
+    const holidays = Array.isArray(holidaysData) ? holidaysData.filter(h => h.type !== 'ignorado') : [];
+
+    const isWeekend = (d) => d.getDay() === 0 || d.getDay() === 6;
+    const isHoliday = (d) => {
+      const ymd = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(d);
+      return holidays.some(h => h.date === ymd);
+    };
+
+    // Calcula o PRÓXIMO dia útil
+    let nextBusinessDay = new Date(now.getTime());
+    do {
+      nextBusinessDay.setDate(nextBusinessDay.getDate() + 1);
+    } while (isWeekend(nextBusinessDay) || isHoliday(nextBusinessDay));
+
+    const nextBusinessDayStr = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Sao_Paulo', year: 'numeric', month: '2-digit', day: '2-digit' }).format(nextBusinessDay);
 
     const { data: bookings, error: fetchError } = await supabase
       .from('bookings')
       .select('*')
-      .eq('date', brtString)
+      .eq('date', nextBusinessDayStr)
       .eq('isconfirmed', 0);
 
     if (fetchError) throw fetchError;
 
     if (!bookings || bookings.length === 0) {
-      return NextResponse.json({ message: 'Nenhuma reserva pendente para hoje.' });
+      return NextResponse.json({ message: 'Nenhuma reserva pendente para o próximo dia útil.' });
     }
 
     const host = request.headers.get('host') || 'reserva-agenda.vercel.app';
@@ -45,18 +61,18 @@ export async function GET(request) {
         await transporter.sendMail({
           from: `"Administração Sala 435" <${process.env.EMAIL_USER}>`,
           to: b.email,
-          subject: "Lembrete: Confirmação de Reserva HOJE - Sala 435",
+          subject: `Lembrete: Confirmação de Reserva para ${b.date.split('-').reverse().join('/')} - Sala 435`,
           html: `
             <div style="background-color: #F8F7F3; padding: 40px 20px; font-family: 'Inter', Helvetica, Arial, sans-serif; color: #1A1A1A; line-height: 1.6;">
               <div style="max-width: 600px; margin: 0 auto; background-color: #FFFFFF; border: 1px solid #E6E4DD; padding: 40px; border-radius: 4px;">
                 
                 <h2 style="font-family: 'Playfair Display', Georgia, serif; font-size: 24px; color: #1A1A1A; margin-top: 0; border-bottom: 1px solid #E6E4DD; padding-bottom: 20px; font-weight: normal;">
-                  Sua reunião é hoje!
+                  Você tem uma reunião amanhã!
                 </h2>
                 
                 <p style="font-size: 16px; margin-top: 30px;">Olá <strong>${b.name}</strong>,</p>
                 
-                <p style="font-size: 16px;">Lembrando que sua reserva para a <strong>Sala 435</strong> é para <strong>HOJE</strong>.</p>
+                <p style="font-size: 16px;">Lembrando que sua reserva para a <strong>Sala 435</strong> está agendada para <strong>${b.date.split('-').reverse().join('/')}</strong>.</p>
                 
                 <table style="width: 100%; margin: 30px 0; border-collapse: collapse;">
                   <tr>
@@ -71,7 +87,7 @@ export async function GET(request) {
 
                 <div style="background-color: #F4EBEB; border-left: 4px solid #B84B4B; padding: 15px 20px; margin-bottom: 25px;">
                   <p style="color: #8A3333; margin: 0; font-size: 14px; font-weight: bold;">
-                    ATENÇÃO: Você tem até 1 hora antes do início da reunião para confirmar. Caso contrário, a sala será liberada automaticamente.
+                    ATENÇÃO: Você tem até 15 minutos antes do início da reunião para confirmar. Caso contrário, a sala será liberada automaticamente.
                   </p>
                 </div>
 
